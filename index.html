@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Money to Binance</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.16/dist/sweetalert2.min.css">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+
+<div id="wrapper">
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <div class="sidebar-brand-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="sidebar-brand-text mx-3">Send Money</div>
+        </a>
+        <hr class="sidebar-divider my-0">
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="sendMoneyLink">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Send Money</span>
+            </a>
+        </li>
+        <hr class="sidebar-divider d-none d-md-block">
+        <!-- ... (other sidebar items) ... -->
+    </ul>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+            <div class="container-fluid">
+                <h1 class="h3 mb-4 text-gray-800">Send Money to Binance</h1>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <form id="sendForm">
+                                    <div class="mb-3">
+                                        <label for="walletSelect" class="form-label">Select Wallet:</label>
+                                        <select class="form-select" id="walletSelect">
+                                            <option value="wallet1">Wallet 1</option>
+                                            <option value="wallet2">Wallet 2</option>
+                                            <option value="wallet3">Wallet 3</option>
+                                            <!-- Add more wallet options as needed -->
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="amountInput" class="form-label">Amount:</label>
+                                        <input type="number" class="form-control" id="amountInput" placeholder="Enter amount">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Send</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto">
+                <div class="text-center">
+                    <span>Send to Binance &copy; 2023</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.16/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#sendForm').submit(function(event) {
+            event.preventDefault();
+
+            var apiKey = 'YOUR_API_KEY';
+            var secretKey = 'YOUR_SECRET_KEY';
+            var selectedWallet = $('#walletSelect').val();
+            var amount = $('#amountInput').val();
+
+            // Replace with the appropriate Binance API endpoint for transferring funds
+            var apiUrl = 'https://api.binance.com/sapi/v1/asset/transfer';
+            var timestamp = Date.now();
+            var queryString = 'asset=' + selectedWallet + '&amount=' + amount + '&timestamp=' + timestamp;
+            var signature = CryptoJS.HmacSHA256(queryString, secretKey).toString(CryptoJS.enc.Hex);
+            var finalUrl = apiUrl + '?' + queryString + '&signature=' + signature;
+
+            $.ajax({
+                type: 'POST', // Use POST for transferring funds
+                url: finalUrl,
+                headers: {
+                    'X-MBX-APIKEY': apiKey
+                },
+                success: function(data) {
+                    console.log('API response:', data);
+                    // Handle the response data as needed
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Transaction Successful',
+                        text: 'Money has been sent successfully!',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                error: function(error) {
+                    console.error('API error:', error);
+                    // Handle the error as needed
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Transaction Failed',
+                        text: 'Oops! Something went wrong. Please try again later.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+
+        // Handle click event for Send Money link
+        $('#sendMoneyLink').click(function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            // Replace this with the URL of the page where you handle the money transfer
+            window.location.href = 'send-money-page.html';
+        });
+    });
+</script>
+
+</body>
+</html>
