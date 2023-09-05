@@ -44,7 +44,7 @@
                     <li class="nav-item">
                         <span id="balanceDisplay">Balance:</span>
                         <span id="accountBalanceBNB" class="mr-2"></span>
-                        <span id="accountBalanceUSD" class="mr-2"></span>
+                        <span id="accountBalanceUSD" class="mr-2" style="color: red; font-weight: bold;"></span>
                     </li>
 
                     <!-- Nav Item - User Information -->
@@ -115,6 +115,7 @@
                     const accountBalanceBNBDisplay = document.querySelector('#accountBalanceBNB');
                     const accountBalanceUSDDisplay = document.querySelector('#accountBalanceUSD');
 
+
                     async function updateAccountBalances() {
                         const accounts = await web3.eth.getAccounts();
                         accountDropdown.innerHTML = '';
@@ -136,6 +137,7 @@
                             const defaultBalanceUSD = accountDropdown.querySelector(`[value="${defaultAccount}"]`).getAttribute('data-balance-usd');
                             accountBalanceBNBDisplay.textContent = `${defaultBalanceBNB} BNB`;
                             accountBalanceUSDDisplay.textContent = defaultBalanceUSD;
+                            await updateTransactionHistoryAjax(defaultAccount);
                         }
 
                         // Add an event listener to update the balance when the selected account changes
@@ -143,6 +145,7 @@
                             const selectedOption = accountDropdown.options[accountDropdown.selectedIndex];
                             const selectedBalanceBNB = selectedOption.getAttribute('data-balance-bnb');
                             const selectedBalanceUSD = selectedOption.getAttribute('data-balance-usd');
+                            updateTransactionHistoryAjax(selectedOption.value);
                             accountBalanceBNBDisplay.textContent = `${selectedBalanceBNB} BNB`;
                             accountBalanceUSDDisplay.textContent = selectedBalanceUSD;
                         });
@@ -154,18 +157,25 @@
                             const apiKey = 'UIH5JIH8BBXXWEUBQR5G6F87DYAWNTW642';
                             const response = await fetch(`https://api-testnet.bscscan.com/api?module=stats&action=bnbprice&apikey=${apiKey}`);
                             const data = await response.json();
-                            const bnbToUsdRate = data.result.ethusdt;
-                            const balanceInUsd = (parseFloat(balanceInBNB) * bnbToUsdRate).toFixed(2);
-                            return balanceInUsd;
+
+                            if (data.status === "1" && data.result && data.result.ethusdt) {
+                                const bnbToUsdRate = data.result.ethusdt;
+                                const balanceInUsd = (parseFloat(balanceInBNB) * bnbToUsdRate).toFixed(2);
+                                return balanceInUsd;
+                            } else {
+                                console.error('Invalid or missing data from BSCScan API');
+                                return 'N/A';
+                            }
                         } catch (error) {
                             console.error('Error fetching BNB to USD exchange rate:', error);
                             return 'N/A';
                         }
                     }
 
+
                     async function updateTransactionHistoryAjax(account) {
                         try {
-                            // Check if 'account' is a valid Ethereum address
+                            // ... (existing code) ...
                             if (!web3.utils.isAddress(account)) {
                                 console.error('Invalid Ethereum address:', account);
                                 return;
@@ -177,26 +187,36 @@
                             const response = await fetch(apiUrl);
                             const data = await response.json();
 
+                            console.log('data' + data);
+                            console.log('data' + account);
+
                             transactionHistoryBody.innerHTML = '';
 
                             for (const transaction of data.result) {
                                 const transactionValueBNB = (parseFloat(transaction.value) / 1e18).toFixed(8);
 
                                 // Check if transactionValueBNB is a valid number
-                                const transactionValueDisplay = isNaN(transactionValueBNB) ? 'N/A' : `${transactionValueBNB} BNB`;
+                                const transactionValueDisplayBNB = isNaN(transactionValueBNB) ? 'N/A' : `${transactionValueBNB} BNB`;
+
+                                // Calculate the transaction value in USD
+                                const transactionValueUSD = await getBalanceInUsd(transactionValueBNB);
+                                const transactionValueDisplayUSD = isNaN(transactionValueUSD) ? 'N/A' : `$${transactionValueUSD} USD`;
 
                                 transactionHistoryBody.innerHTML += `
-                                    <tr>
-                                        <td>${transaction.hash}</td>
-                                        <td>${transaction.blockNumber}</td>
-                                        <td>${transactionValueDisplay}</td>
-                                    </tr>
-                                `;
+                    <tr>
+                        <td>${transaction.hash}</td>
+                        <td>${transaction.blockNumber}</td>
+                        <td>${transactionValueDisplayBNB}</td>
+                        <td>${transactionValueDisplayUSD}</td>
+                    </tr>
+                `;
                             }
                         } catch (error) {
                             console.error('Error fetching transaction history:', error);
                         }
                     }
+
+
 
                     sendTransactionButton.addEventListener('click', async () => {
                         if (!web3) {
@@ -242,18 +262,19 @@
                     });
 
                     if (typeof window.ethereum !== 'undefined') {
-                        window.ethereum.request({ method: 'eth_requestAccounts' }).then(() => {
-                            web3 = new Web3(window.ethereum);
-                            updateAccountBalances();
-                            const selectedOption = accountDropdown.options[accountDropdown.selectedIndex];
-                            selectedAccount = selectedOption.value;
-                            updateTransactionHistoryAjax(selectedAccount);
-                        }).catch(err => {
-                            alert('Error connecting to MetaMask: ' + err.message);
+                        window.ethereum.on('connect', () => {
+
+                            window.ethereum.request({ method: 'eth_requestAccounts' }).then(() => {
+                                web3 = new Web3(window.ethereum);
+                                updateAccountBalances();
+                            }).catch(err => {
+                                alert('Error connecting to MetaMask: ' + err.message);
+                            });
                         });
                     } else {
                         alert('MetaMask is not installed. Please install it and try again.');
                     }
+
                 });
             </script>
         </div>
