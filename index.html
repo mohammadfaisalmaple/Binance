@@ -206,7 +206,7 @@
                                 // Transaction successful, update the view's balances
                                 const senderBalanceUSD = accountBalanceUSD.textContent;
                                 const numericValue = parseFloat(senderBalanceUSD.replace(/[^0-9.]/g, ''));
-                                accountBalanceUSD.textContent = numericValue - amountInUSD;
+                                accountBalanceUSD.textContent = '$'+(numericValue - amountInUSD) +' USD';
 
                                 Swal.fire('Transaction Successful!', `Transaction of $${amountInUSD} USD has been confirmed.`, 'success');
                                 updateTransactionHistoryAjax(selectedOption.value);
