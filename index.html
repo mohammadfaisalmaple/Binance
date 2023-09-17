@@ -96,10 +96,6 @@
                         </a>
                         <!-- Dropdown - User Information -->
                         <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Profile
-                            </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item"  onclick="location.href = 'login.html';"  data-toggle="modal" >
                                 <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
@@ -135,6 +131,7 @@
                                 <th >to address</th>
                                 <th>Value (BNB)</th>
                                 <th>Value (USD)</th>
+                                <th>Created At</th>
                             </tr>
                             </thead>
                             <tbody id="transactionHistoryBody"></tbody>
@@ -158,6 +155,7 @@
 
             <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.16/dist/sweetalert2.all.min.js"></script>
 
             <script>
@@ -209,7 +207,8 @@
                                 accountBalanceUSD.textContent = '$'+(numericValue - amountInUSD) +' USD';
 
                                 Swal.fire('Transaction Successful!', `Transaction of $${amountInUSD} USD has been confirmed.`, 'success');
-                                updateTransactionHistoryAjax(selectedOption.value);
+                                window.location.reload();
+                                await updateTransactionHistoryAjax(selectedOption.value);
                             } else {
                                 Swal.fire('Transaction Failed', 'The transaction failed or was not confirmed.', 'error');
                             }
@@ -311,6 +310,7 @@
                             for (const transaction of data.result) {
                                 const isSendTransaction = transaction.from.toLowerCase() === account.toLowerCase();
                                 const transactionValueBNB = (parseFloat(transaction.value) / 1e18).toFixed(8);
+                                const date=await convert_date(transaction.timeStamp);
 
                                 // Check if transactionValueBNB is a valid number
                                 const transactionValueDisplayBNB = isNaN(transactionValueBNB) ? 'N/A' : `${transactionValueBNB} BNB`;
@@ -329,6 +329,7 @@
                                         <td class="overflow-column" title="${transaction.to}">${transaction.to}</td>
                                         <td>${icon} ${transactionValueDisplayBNB}</td>
                                         <td>${transactionValueDisplayUSD}</td>
+                                        <td>${date}</td>
                                     </tr>
                                 `;
                             }
@@ -337,7 +338,25 @@
                         }
                     }
 
+                    async  function convert_date(unixTimestamp){
 
+
+                        // Create a new Date object using the timestamp
+                         const date = new Date(unixTimestamp * 1000); // Multiply by 1000 to convert seconds to milliseconds
+
+                        // Get individual date and time components
+                                                const year = date.getFullYear();
+                                                const month = date.getMonth() + 1; // Months are zero-based, so add 1
+                                                const day = date.getDate();
+                                                const hours = date.getHours();
+                                                const minutes = date.getMinutes();
+                                                const seconds = date.getSeconds();
+
+                        // Create a human-readable date and time string
+                                                const humanReadableDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                                                return humanReadableDate;
+
+                    }
                     async function sendTransaction(from, to, amountInBNB) {
                         showLoadingScreen();
                         try {
