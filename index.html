@@ -207,7 +207,6 @@
                                 accountBalanceUSD.textContent = '$'+(numericValue - amountInUSD) +' USD';
 
                                 Swal.fire('Transaction Successful!', `Transaction of $${amountInUSD} USD has been confirmed.`, 'success');
-                                window.location.reload();
                                 await updateTransactionHistoryAjax(selectedOption.value);
                             } else {
                                 Swal.fire('Transaction Failed', 'The transaction failed or was not confirmed.', 'error');
